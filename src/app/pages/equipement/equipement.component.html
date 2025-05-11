@@ -1,0 +1,155 @@
+<div class="topbar">
+  <div class="logo">
+    <img src="assets/logo-eng.jpg" alt="ENG Logo" />
+    <span class="site-name">Gestion des parcs des équipements</span>
+  </div>
+
+  <div class="menu-center">
+    <a class="menu-button" href="#">Dashbord</a>
+    <a class="menu-button" href="/equipement">Équipement</a>
+    <a class="menu-button" href="#">Utilisateur</a>
+    <div class="dropdown">
+      <button class="menu-button">Mouvement</button>
+      <div class="dropdown-content">
+        <a href="#">Réforme</a>
+        <a href="#">Réaffectation</a>
+        <a href="#">Prêt</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="menu-button">Table de Codification</button>
+      <div class="dropdown-content">
+        <a href="/marque">Marque</a>
+        <a href="/organe">Organe</a>
+        <a href="/unite">Unité</a>
+        <a href="/categorie">Catégorie</a>
+        <a href="/typeeq">Type</a>
+        <a href="/caracteristique">Caractéristique</a>
+        <a href="/groupeidentique">Groupe Identique</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile" (click)="profileOpen = !profileOpen">
+    <img class="profile-img" src="assets/user.png" alt="Profil utilisateur" />
+    <span class="profile-name">{{ username }}</span>
+    <div class="profile-menu" *ngIf="profileOpen">
+      <div class="menu-username">{{ username }}</div>
+      <button class="logout-btn" (click)="logout()">Déconnexion</button>
+    </div>
+  </div>
+</div>
+
+<!-- Page content starts here -->
+<div class="container">
+  <div class="toolbar">
+    <input class="form-control" type="text" [(ngModel)]="searchTerm" placeholder="🔍 Rechercher..." (input)="search()" />
+    <select class="form-control" [(ngModel)]="sortBy" (change)="search()">
+      <option value="codeEqp">Code</option>
+      <option value="design">Désignation</option>
+      <option value="etat">État</option>
+    </select>
+    <button class="btn sort-btn" (click)="toggleSort(sortBy)">
+      <span class="arrow">{{ ascending ? '▲' : '▼' }}</span>
+    </button>
+    <div class="spacer"></div>
+    <button class="btn orange" (click)="openForm()">+ Ajouter Équipement</button>
+  </div>
+
+  <h2 class="header">Liste des Équipements
+    <span class="tooltip badge">
+      {{ equipements.length }}
+      <span class="tooltip-text">Nombre total des Équipements</span>
+    </span>
+  </h2>
+
+  <table class="equipement-table">
+    <thead>
+      <tr>
+        <th>Code</th>
+        <th>Désignation</th>
+        <th>État</th>
+        <th>Groupe Identique</th>
+        <th>Unité</th>
+        <th style="text-align: left;">
+          <span style="display: inline-block; transform: translateX(200px);">Actions</span>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let eq of equipements">
+        <td>{{ eq.codeEqp }}</td>
+        <td>{{ eq.design }}</td>
+        <td>{{ eq.etat }}</td>
+        <td>{{ eq.groupeIdentiqueDesignation || '-' }}</td>
+        <td>{{ eq.uniteDesignation || '-' }}</td>
+        <td>
+          <button class="btn orange tooltip me-2" (click)="openForm(eq)">
+            ✏️
+            <span class="tooltip-text">Modifier cet équipement</span>
+          </button>
+          <button class="btn grey tooltip tooltip-left" (click)="deleteEquipement(eq)">
+            🗑️
+            <span class="tooltip-text">Supprimer cet équipement</span>
+          </button>
+        </td>
+      </tr>
+      <tr *ngIf="equipements.length === 0">
+        <td colspan="6" class="empty-row">Aucun équipement trouvé.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- MODALE SUPPRESSION -->
+  <div class="modal" *ngIf="showDeleteConfirm">
+    <div class="form">
+      <h3>Confirmer la suppression</h3>
+      <p>Voulez-vous vraiment supprimer cet équipement ?</p>
+      <div class="actions">
+        <button class="btn orange" (click)="confirmDelete()">Supprimer</button>
+        <button class="btn grey" (click)="cancelDelete()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL for add/edit equipement -->
+  <div class="modal" *ngIf="showForm">
+    <div class="form">
+      <h3>{{ selectedEquipement ? 'Modifier' : 'Ajouter' }} un Équipement</h3>
+      <input class="form-control" type="text" [(ngModel)]="design_input" placeholder="Désignation" />
+      <select class="form-control" [(ngModel)]="etat_input" required>
+        <option value="">Sélectionner un état</option>
+        <option value="En Service">En Service</option>
+        <option value="En panne">En panne</option>
+        <option value="En stock">En stock</option>
+        <option value="Réformé">Réformé</option>
+        <option value="Prêt">Prêt</option>
+      </select>
+      <select class="form-control" [(ngModel)]="idType_input" required>
+        <option value="">Sélectionner un type</option>
+        <option *ngFor="let type of types" [value]="type.idtypequip">{{ type.designation }}</option>
+      </select>
+      <select class="form-control" [(ngModel)]="idCat_input" required>
+        <option value="">Sélectionner une catégorie</option>
+        <option *ngFor="let cat of categories" [value]="cat.idcategorie">{{ cat.design }}</option>
+      </select>
+      <select class="form-control" [(ngModel)]="idMarq_input" required>
+        <option value="">Sélectionner une marque</option>
+        <option *ngFor="let marque of marques" [value]="marque.idmarque">{{ marque.nom_fabriquant }}</option>
+      </select>
+      <input class="form-control" type="date" [(ngModel)]="dateMiseService_input" placeholder="Date de mise en service" />
+      <input class="form-control" type="number" [(ngModel)]="anneeFabrication_input" placeholder="Année de fabrication" min="1900" max="2100" />
+      <input class="form-control" type="date" [(ngModel)]="dateAcquisition_input" placeholder="Date d'acquisition" />
+      <input class="form-control" type="number" [(ngModel)]="valeurAcquisition_input" placeholder="Valeur d'acquisition" min="0" step="0.01" />
+      <div class="actions">
+        <button class="btn orange" (click)="saveEquipement()">💾 Enregistrer</button>
+        <button class="btn grey" (click)="closeForm()">❌ Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+  </div>
+</div> 

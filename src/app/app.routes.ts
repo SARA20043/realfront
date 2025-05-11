@@ -103,6 +103,13 @@ export const routes: Routes = [
         (m) => m.GroupeIdentiqueComponent
       ),
   },
+  {
+    path: 'equipement',
+    loadComponent: () =>
+      import('./pages/equipement/equipement.component').then(
+        (m) => m.EquipementComponent
+      ),
+  },
 
   { path: '**', redirectTo: '/login' },
 ];
