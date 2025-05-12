@@ -663,4 +663,46 @@ select.form-control {
         color: #333;
         padding: 8px;
     }
+}
+
+.caracteristiques-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f9f9f9;
+}
+.carac-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.carac-item input[type="checkbox"] {
+  margin: 0 4px 0 0 !important;
+  vertical-align: middle !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+.carac-item label {
+  margin: 0 !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  vertical-align: middle !important;
+  font-size: 15px !important;
+  min-width: 60px !important;
+  width: auto !important;
+  display: inline-block !important;
+}
+.value-input {
+  flex: 1 1 120px !important;
+  min-width: 80px !important;
+  max-width: 200px !important;
+  padding: 5px !important;
+  margin-left: 0 !important;
 } 

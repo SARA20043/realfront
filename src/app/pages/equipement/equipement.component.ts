@@ -7,6 +7,7 @@ import { Equipement, CreateEquipement, UpdateEquipement, EquipementFilter } from
 import { TypeEqpt } from '../../models/typeeq.model';
 import { Marque } from '../../models/marque.model';
 import { EquipementService } from '../../services/equipement.service';
+import { Caracteristique } from '../../models/caracteristique.model';
 
 @Component({
     selector: 'app-equipement',
@@ -39,6 +40,13 @@ export class EquipementComponent implements OnInit {
     equipementToDelete: Equipement | null = null;
     profileOpen = false;
     username = 'Utilisateur'; // Replace with actual username if available
+    caracteristiques: (Caracteristique & { checked?: boolean, valeur?: string })[] = [];
+    organes: { id_organe: number, libelle_organe: string, checked?: boolean, numserie?: string }[] = [];
+    showAffectModal = false;
+    affectEquipement: Equipement | null = null;
+    affectUnite: number | null = null;
+    affectDate: string = '';
+    unites: any[] = [];
 
     private equipementService = inject(EquipementService);
     private http = inject(HttpClient);
@@ -57,11 +65,21 @@ export class EquipementComponent implements OnInit {
             sortBy: this.sortBy,
             ascending: this.ascending
         };
-        
         this.equipementService.getAll(filter)
             .subscribe({
                 next: (data) => {
                     this.equipements = data;
+                    // Fetch organes and caractéristiques for each equipment
+                    this.equipements.forEach(eq => {
+                        this.equipementService.getOrganesForEquipement(eq.idEqpt).subscribe({
+                            next: (orgs) => { eq.organes = orgs; },
+                            error: () => { eq.organes = []; }
+                        });
+                        this.equipementService.getCaracteristiquesForEquipement(eq.idEqpt).subscribe({
+                            next: (caracs) => { eq.caracteristiques = caracs; },
+                            error: () => { eq.caracteristiques = []; }
+                        });
+                    });
                     this.isLoading = false;
                 },
                 error: (error) => {
@@ -139,6 +157,12 @@ export class EquipementComponent implements OnInit {
         this.dateAcquisition_input = equipement?.dateAcquisition ? new Date(equipement.dateAcquisition).toISOString().split('T')[0] : '';
         this.valeurAcquisition_input = equipement?.valeurAcquisition || null;
         this.showForm = true;
+        this.caracteristiques = [];
+        this.organes = [];
+        if (this.idType_input && this.idMarq_input) {
+            this.loadCaracteristiques(this.idType_input, this.idMarq_input);
+            this.loadOrganes(this.idType_input, this.idMarq_input);
+        }
     }
 
     closeForm() {
@@ -155,6 +179,38 @@ export class EquipementComponent implements OnInit {
         this.showForm = false;
     }
 
+    onTypeOrMarqueChange() {
+        if (this.idType_input && this.idMarq_input) {
+            this.loadCaracteristiques(this.idType_input, this.idMarq_input);
+            this.loadOrganes(this.idType_input, this.idMarq_input);
+        } else {
+            this.caracteristiques = [];
+            this.organes = [];
+        }
+    }
+
+    loadCaracteristiques(typeId: number, marqueId: number) {
+        this.equipementService.getCaracteristiquesByTypeAndMarque(typeId, marqueId).subscribe({
+            next: (data) => {
+                this.caracteristiques = data.map(carac => ({ ...carac, checked: false, valeur: '' }));
+            },
+            error: (err) => {
+                this.caracteristiques = [];
+            }
+        });
+    }
+
+    loadOrganes(typeId: number, marqueId: number) {
+        this.equipementService.getOrganesByTypeAndMarque(typeId, marqueId).subscribe({
+            next: (data) => {
+                this.organes = data.map(org => ({ ...org, checked: false, numserie: '' }));
+            },
+            error: (err) => {
+                this.organes = [];
+            }
+        });
+    }
+
     saveEquipement() {
         const validEtats = ["En Service", "En panne", "En stock", "Réformé", "Prêt"];
         if (!this.design_input || !this.etat_input || !this.idType_input || !this.idCat_input || !this.idMarq_input) {
@@ -165,10 +221,6 @@ export class EquipementComponent implements OnInit {
             alert('L\'état doit être l\'une des valeurs suivantes : ' + validEtats.join(', '));
             return;
         }
-
-        console.log('Selected category ID:', this.idCat_input);
-        console.log('Available categories:', this.categories);
-
         this.isLoading = true;
         const equipementData: CreateEquipement = {
             design: this.design_input,
@@ -183,46 +235,86 @@ export class EquipementComponent implements OnInit {
             idGrpIdq: undefined,
             idunite: undefined
         };
-
-        console.log('Payload envoyé au backend:', JSON.stringify(equipementData, null, 2));
-
-        if (this.selectedEquipement) {
-            this.equipementService.update(this.selectedEquipement.idEqpt, equipementData)
-                .subscribe({
-                    next: () => {
-                        this.loadEquipements();
-                        this.closeForm();
-                        this.isLoading = false;
-                    },
-                    error: (error) => {
-                        console.error('Error updating equipement:', error);
-                        this.isLoading = false;
-                        let errorMsg = 'Une erreur est survenue lors de la mise à jour de l\'équipement.';
-                        if (error.error) {
-                            errorMsg += '\n' + (typeof error.error === 'string' ? error.error : JSON.stringify(error.error));
+        // 1. Create equipement
+        this.equipementService.create(equipementData)
+            .subscribe({
+                next: (createdEquipement: any) => {
+                    // 2. If characteristics are selected, send them
+                    const selectedCaracteristiques = this.caracteristiques
+                        .filter(c => c.checked)
+                        .map(c => ({ idcarac: c.id_caracteristique, valeur: c.valeur || '' }));
+                    if (selectedCaracteristiques.length > 0) {
+                        this.equipementService.bulkCreateCaracteristiqueEquipement({
+                            ideqpt: createdEquipement.idEqpt,
+                            caracteristiques: selectedCaracteristiques
+                        }).subscribe({
+                            next: () => {
+                                // ORGANE LOGIC
+                                const selectedOrganes = this.organes
+                                    .filter(o => o.checked)
+                                    .map(o => ({ idorg: o.id_organe, numserie: o.numserie || '' }));
+                                const formattedOrganes = selectedOrganes.map(o => ({
+                                    idorg: o.idorg,
+                                    numsérie: o.numserie
+                                }));
+                                if (formattedOrganes.length > 0) {
+                                    this.equipementService.postOrganeEquipement({
+                                        ideqpt: createdEquipement.idEqpt,
+                                        organes: formattedOrganes
+                                    }).subscribe({
+                                        next: () => {
+                                            this.loadEquipements();
+                                            this.closeForm();
+                                            this.isLoading = false;
+                                        },
+                                        error: () => {
+                                            this.isLoading = false;
+                                            alert('Erreur lors de l\'enregistrement des organes.');
+                                        }
+                                    });
+                                }
+                            },
+                            error: () => {
+                                this.isLoading = false;
+                                alert('Erreur lors de l\'enregistrement des caractéristiques.');
+                            }
+                        });
+                    } else {
+                        // ORGANE LOGIC
+                        const selectedOrganes2 = this.organes
+                            .filter(o => o.checked)
+                            .map(o => ({ idorg: o.id_organe, numserie: o.numserie || '' }));
+                        const formattedOrganes2 = selectedOrganes2.map(o => ({
+                            idorg: o.idorg,
+                            numsérie: o.numserie
+                        }));
+                        if (formattedOrganes2.length > 0) {
+                            this.equipementService.postOrganeEquipement({
+                                ideqpt: createdEquipement.idEqpt,
+                                organes: formattedOrganes2
+                            }).subscribe({
+                                next: () => {
+                                    this.loadEquipements();
+                                    this.closeForm();
+                                    this.isLoading = false;
+                                },
+                                error: () => {
+                                    this.isLoading = false;
+                                    alert('Erreur lors de l\'enregistrement des organes.');
+                                }
+                            });
                         }
-                        alert(errorMsg);
                     }
-                });
-        } else {
-            this.equipementService.create(equipementData)
-                .subscribe({
-                    next: () => {
-                        this.loadEquipements();
-                        this.closeForm();
-                        this.isLoading = false;
-                    },
-                    error: (error) => {
-                        console.error('Error creating equipement:', error);
-                        this.isLoading = false;
-                        let errorMsg = 'Une erreur est survenue lors de la création de l\'équipement.';
-                        if (error.error) {
-                            errorMsg += '\n' + (typeof error.error === 'string' ? error.error : JSON.stringify(error.error));
-                        }
-                        alert(errorMsg);
+                },
+                error: (error) => {
+                    this.isLoading = false;
+                    let errorMsg = 'Une erreur est survenue lors de la création de l\'équipement.';
+                    if (error.error) {
+                        errorMsg += '\n' + (typeof error.error === 'string' ? error.error : JSON.stringify(error.error));
                     }
-                });
-        }
+                    alert(errorMsg);
+                }
+            });
     }
 
     deleteEquipement(equipement: Equipement) {
@@ -263,5 +355,50 @@ export class EquipementComponent implements OnInit {
         // Implement your logout logic here
         localStorage.clear();
         window.location.href = '/login';
+    }
+
+    openAffectModal(eq: Equipement) {
+        this.affectEquipement = eq;
+        this.affectUnite = null;
+        this.affectDate = '';
+        this.showAffectModal = true;
+        this.loadUnites();
+    }
+
+    closeAffectModal() {
+        this.showAffectModal = false;
+        this.affectEquipement = null;
+        this.affectUnite = null;
+        this.affectDate = '';
+    }
+
+    loadUnites() {
+        this.http.get<any[]>(`${environment.apiUrl}/unite`).subscribe({
+            next: (data) => { this.unites = data; },
+            error: () => { this.unites = []; }
+        });
+    }
+
+    submitAffectation() {
+        if (!this.affectEquipement || !this.affectUnite || !this.affectDate) {
+            alert('Veuillez remplir tous les champs.');
+            return;
+        }
+        this.isLoading = true;
+        this.equipementService.postAffectation({
+            ideqpt: this.affectEquipement.idEqpt,
+            idunite: this.affectUnite,
+            dateaffec: this.affectDate
+        }).subscribe({
+            next: () => {
+                this.loadEquipements();
+                this.closeAffectModal();
+                this.isLoading = false;
+            },
+            error: () => {
+                alert('Erreur lors de l\'affectation.');
+                this.isLoading = false;
+            }
+        });
     }
 } 

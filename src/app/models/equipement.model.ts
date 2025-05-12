@@ -17,6 +17,8 @@ export interface Equipement {
     valeurAcquisition?: number;
     idunite?: number;
     uniteDesignation?: string;
+    caracteristiques?: any[];
+    organes?: any[];
 }
 
 export interface CreateEquipement {

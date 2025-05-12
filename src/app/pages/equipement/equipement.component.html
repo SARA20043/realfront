@@ -71,6 +71,8 @@
         <th>État</th>
         <th>Groupe Identique</th>
         <th>Unité</th>
+        <th>Caractéristiques</th>
+        <th>Organes</th>
         <th style="text-align: left;">
           <span style="display: inline-block; transform: translateX(200px);">Actions</span>
         </th>
@@ -84,6 +86,25 @@
         <td>{{ eq.groupeIdentiqueDesignation || '-' }}</td>
         <td>{{ eq.uniteDesignation || '-' }}</td>
         <td>
+          <ng-container *ngIf="eq.caracteristiques && eq.caracteristiques.length > 0; else noCarac">
+            <div *ngFor="let c of eq.caracteristiques">
+              {{ c.nomcarac || c.designation || c.libelle || c.nomCaracteristique || c.nom || c.name }}: {{ c.valeur || c.value }}
+            </div>
+          </ng-container>
+          <ng-template #noCarac>Aucune</ng-template>
+        </td>
+        <td>
+          <ng-container *ngIf="eq.organes && eq.organes.length > 0; else noOrgane">
+            <div *ngFor="let o of eq.organes">
+              {{ o.libelle_organe || o.nomOrgane || o.libelle || o.name }}
+              <span *ngIf="o.numserie || o['numsérie']">
+                (SN: {{ o.numserie || o['numsérie'] }})
+              </span>
+            </div>
+          </ng-container>
+          <ng-template #noOrgane>Aucun</ng-template>
+        </td>
+        <td>
           <button class="btn orange tooltip me-2" (click)="openForm(eq)">
             ✏️
             <span class="tooltip-text">Modifier cet équipement</span>
@@ -92,6 +113,7 @@
             🗑️
             <span class="tooltip-text">Supprimer cet équipement</span>
           </button>
+          <button *ngIf="!eq.idunite" class="btn orange" (click)="openAffectModal(eq)">Affecter</button>
         </td>
       </tr>
       <tr *ngIf="equipements.length === 0">
@@ -125,7 +147,7 @@
         <option value="Réformé">Réformé</option>
         <option value="Prêt">Prêt</option>
       </select>
-      <select class="form-control" [(ngModel)]="idType_input" required>
+      <select class="form-control" [(ngModel)]="idType_input" required (change)="onTypeOrMarqueChange()">
         <option value="">Sélectionner un type</option>
         <option *ngFor="let type of types" [value]="type.idtypequip">{{ type.designation }}</option>
       </select>
@@ -133,7 +155,7 @@
         <option value="">Sélectionner une catégorie</option>
         <option *ngFor="let cat of categories" [value]="cat.idcategorie">{{ cat.design }}</option>
       </select>
-      <select class="form-control" [(ngModel)]="idMarq_input" required>
+      <select class="form-control" [(ngModel)]="idMarq_input" required (change)="onTypeOrMarqueChange()">
         <option value="">Sélectionner une marque</option>
         <option *ngFor="let marque of marques" [value]="marque.idmarque">{{ marque.nom_fabriquant }}</option>
       </select>
@@ -141,9 +163,53 @@
       <input class="form-control" type="number" [(ngModel)]="anneeFabrication_input" placeholder="Année de fabrication" min="1900" max="2100" />
       <input class="form-control" type="date" [(ngModel)]="dateAcquisition_input" placeholder="Date d'acquisition" />
       <input class="form-control" type="number" [(ngModel)]="valeurAcquisition_input" placeholder="Valeur d'acquisition" min="0" step="0.01" />
+      <!-- Caractéristiques Section -->
+      <div class="form-group">
+        <label>Caractéristiques</label>
+        <div class="caracteristiques-list">
+          <div *ngFor="let carac of caracteristiques" class="carac-item">
+            <input type="checkbox" [(ngModel)]="carac.checked" [name]="'carac-' + carac.id_caracteristique" />
+            <label>{{ carac.libelle }}</label>
+            <input *ngIf="carac.checked" type="text" class="value-input" [(ngModel)]="carac.valeur" [name]="'value-' + carac.id_caracteristique" placeholder="Valeur..." />
+          </div>
+        </div>
+      </div>
+      <!-- Organes Section -->
+      <div class="form-group">
+        <label>Organes</label>
+        <div class="caracteristiques-list">
+          <div *ngFor="let org of organes" class="carac-item">
+            <input type="checkbox" [(ngModel)]="org.checked" [name]="'organe-' + org.id_organe" />
+            <label>{{ org.libelle_organe }}</label>
+            <input *ngIf="org.checked" type="text" class="value-input" [(ngModel)]="org.numserie" [name]="'numserie-' + org.id_organe" placeholder="Numéro de série..." />
+          </div>
+        </div>
+      </div>
       <div class="actions">
         <button class="btn orange" (click)="saveEquipement()">💾 Enregistrer</button>
         <button class="btn grey" (click)="closeForm()">❌ Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affectation Modal -->
+  <div class="modal" *ngIf="showAffectModal">
+    <div class="form">
+      <h3>Affecter un Équipement</h3>
+      <div class="form-group">
+        <label>Unité</label>
+        <select class="form-control" [(ngModel)]="affectUnite">
+          <option value="">Sélectionner une unité</option>
+          <option *ngFor="let unite of unites" [value]="unite.idunite">{{ unite.designation || unite.nom || unite.name }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Date d'affectation</label>
+        <input class="form-control" type="date" [(ngModel)]="affectDate" />
+      </div>
+      <div class="actions">
+        <button class="btn orange" (click)="submitAffectation()">Enregistrer</button>
+        <button class="btn grey" (click)="closeAffectModal()">Annuler</button>
       </div>
     </div>
   </div>
