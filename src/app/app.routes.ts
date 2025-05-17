@@ -4,6 +4,7 @@ import { LoginComponent } from './components/login/login.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { UserManagementComponent } from './components/user-management/user-management.component';
 import { AdminGuard } from './guards/admin.guard';
+import { FicheEquipementComponent } from './pages/fiche-equipement/fiche-equipement.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -109,6 +110,14 @@ export const routes: Routes = [
       import('./pages/equipement/equipement.component').then(
         (m) => m.EquipementComponent
       ),
+  },
+  {
+    path: 'fiche-equipement',
+    component: FicheEquipementComponent
+  },
+  {
+    path: 'fiche-equipement/:id',
+    component: FicheEquipementComponent
   },
 
   { path: '**', redirectTo: '/login' },

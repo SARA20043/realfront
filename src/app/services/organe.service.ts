@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Organe, Caracteristique, Marque } from '../models/organe.model';
+import { Organe, Caracteristique, Marque, OrganeEquipement } from '../models/organe.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrganeService {
   private baseUrl = 'http://localhost:5186/api/organe'; // Attention casse correcte: "organe"
+  private apiUrl = 'http://localhost:5186/api/OrganeEquipement';
 
   constructor(private http: HttpClient) {}
 
@@ -56,9 +57,13 @@ export class OrganeService {
 
   getMarques(): Observable<Marque[]> {
     return this.http.get<Marque[]>('http://localhost:5186/api/marque');
- 
   }
+
   getOrganeCount(): Observable<number> {
     return this.http.get<number>(`${this.baseUrl}/count`);
+  }
+
+  getByEquipementId(equipementId: number): Observable<OrganeEquipement[]> {
+    return this.http.get<OrganeEquipement[]>(`${this.apiUrl}/equipement/${equipementId}`);
   }
 }

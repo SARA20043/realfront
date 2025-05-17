@@ -3,4 +3,12 @@ export interface Caracteristique {
     libelle: string;
   }
   
+export interface CaracteristiqueEquipement {
+    ideqpt: number;
+    idcarac: number;
+    designation: string;
+    valeur: string;
+    nomcarac: string;
+}
+  
   

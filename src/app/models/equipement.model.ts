@@ -11,12 +11,18 @@ export interface Equipement {
     idGrpIdq?: number;
     groupeIdentiqueDesignation?: string;
     etat?: string;
+    numserie: string;
+    position_physique: string;
     dateMiseService?: Date;
-    AnnéeFabrication?: number;
+    anneeFabrication?: number;
     dateAcquisition?: Date;
     valeurAcquisition?: number;
     idunite?: number;
     uniteDesignation?: string;
+    dateaffec?: Date;
+    num_decision_affectation?: string;
+    num_ordre?: string;
+    observation?: string;
     caracteristiques?: any[];
     organes?: any[];
 }
@@ -28,11 +34,17 @@ export interface CreateEquipement {
     design: string;
     idGrpIdq?: number;
     etat?: string;
+    numserie: string;
+    position_physique: string;
     dateMiseService?: Date;
-    AnnéeFabrication?: number;
+    anneeFabrication?: number;
     dateAcquisition?: Date;
     valeurAcquisition?: number;
     idunite?: number;
+    dateaffec?: Date;
+    num_decision_affectation?: string;
+    num_ordre?: string;
+    observation?: string;
 }
 
 export interface UpdateEquipement {
@@ -42,8 +54,10 @@ export interface UpdateEquipement {
     design: string;
     idGrpIdq?: number;
     etat?: string;
+    numserie: string;
+    position_physique: string;
     dateMiseService?: Date;
-    AnnéeFabrication?: number;
+    anneeFabrication?: number;
     dateAcquisition?: Date;
     valeurAcquisition?: number;
     idunite?: number;
@@ -55,8 +69,10 @@ export interface EquipementFilter {
     idMarq?: number;
     idType?: number;
     idGrpIdq?: number;
+    numserie?: string;
+    position_physique?: string;
     dateMiseService?: Date;
-    AnnéeFabrication?: number;
+    anneeFabrication?: number;
     dateAcquisition?: Date;
     valeurAcquisition?: number;
     searchTerm?: string;
