@@ -92,10 +92,6 @@
         <td>{{ eq.numserie || '-' }}</td>
         <td><span class="status-badge" [ngClass]="getStatusClass(eq.etat)">{{ eq.etat }}</span></td>
         <td class="actions-cell">
-          <button class="btn blue tooltip me-2" [routerLink]="['/fiche-equipement', eq.idEqpt]">
-            👁️
-            <span class="tooltip-text">Voir les détails</span>
-          </button>
           <button class="btn orange tooltip me-2" (click)="openForm(eq)">
             ✏️
             <span class="tooltip-text">Modifier cet équipement</span>
@@ -279,13 +275,7 @@
         <div class="form-row">
           <div class="form-group full-width">
             <label for="observation">Observation</label>
-            <textarea 
-              class="form-control" 
-              id="observation"
-              formControlName="observation" 
-              rows="4" 
-              placeholder="Ajouter des informations supplémentaires...">
-            </textarea>
+            <textarea class="form-control" id="observation" formControlName="observation"  rows="4"   placeholder="Ajouter des informations supplémentaires..."></textarea>
           </div>
         </div>
 

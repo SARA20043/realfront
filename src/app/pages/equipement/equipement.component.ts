@@ -100,13 +100,19 @@ export class EquipementComponent implements OnInit {
     private organeService = inject(OrganeService);
 
     ngOnInit(): void {
+        this.initializeForm();
+        this.form.get('anneeFabrication')?.valueChanges.subscribe(value => {
+            if (value === '') {
+                this.form.get('anneeFabrication')?.setValue(null);
+            }
+        });
+        console.log('Form controls initialized:', this.form.controls);
         this.loadEquipements();
         this.loadTypes();
         this.loadCategories();
         this.loadMarques();
         this.loadGroupesIdentiques();
         this.loadUnites();
-        this.initializeForm();
     }
 
     private initializeForm() {
@@ -119,7 +125,7 @@ export class EquipementComponent implements OnInit {
             idCat: ['', Validators.required],
             idMarq: ['', Validators.required],
             dateMiseService: ['', Validators.required],
-            anneeFabrication: ['', Validators.required],
+            anneeFabrication: [null, Validators.required],
             dateAcquisition: ['', Validators.required],
             valeurAcquisition: ['', Validators.required],
             idGrpIdq: [''],
@@ -129,7 +135,7 @@ export class EquipementComponent implements OnInit {
             num_decision_affectation: [''],
             num_ordre: [''],
             // Observation field
-            observation: ['']
+            observation: ['INCONNU', Validators.required]
         });
     }
 
@@ -441,32 +447,97 @@ export class EquipementComponent implements OnInit {
 
     saveEquipement() {
         const validEtats = ["En Service", "En panne", "En stock", "Réformé", "Prêt"];
-        if (!this.design_input || !this.etat_input || !this.idType_input || !this.idCat_input || !this.idMarq_input) {
+        
+        // Log form state before getting values
+        console.log('Form controls before getting values:', this.form.controls);
+        console.log('Form value before getRawValue:', this.form.value);
+        
+        // Get form values
+        const formValue = this.form.getRawValue();
+        console.log('Form raw values:', formValue);
+        
+        // Get observation value directly from form
+        const observationControl = this.form.get('observation');
+        let observationValue = observationControl?.value || 'INCONNU';
+        console.log('Observation value:', observationValue);
+        
+        // Ensure observation is a string and not null
+        if (!observationValue || observationValue.trim() === '') {
+            observationControl?.setValue('INCONNU');
+            observationValue = 'INCONNU';
+        }
+        
+        // Make sure the observation is a string
+        if (typeof observationValue !== 'string') {
+            observationValue = String(observationValue);
+        }
+        
+        if (!formValue.design || !formValue.etat || !formValue.idType || !formValue.idCat || !formValue.idMarq) {
             alert('Veuillez remplir tous les champs obligatoires.');
             return;
         }
-        if (!validEtats.includes(this.etat_input)) {
+        if (!validEtats.includes(formValue.etat)) {
             alert('L\'état doit être l\'une des valeurs suivantes : ' + validEtats.join(', '));
             return;
         }
         this.isLoading = true;
+        // Create equipementData with explicit observation
         const equipementData: CreateEquipement = {
-            design: this.design_input,
-            etat: this.etat_input,
-            idType: Number(this.idType_input),
-            idCat: Number(this.idCat_input),
-            idMarq: Number(this.idMarq_input),
-            dateMiseService: this.dateMiseService_input ? new Date(this.dateMiseService_input) : undefined,
-            anneeFabrication: this.anneeFabrication_input || undefined,
-            dateAcquisition: this.dateAcquisition_input ? new Date(this.dateAcquisition_input) : undefined,
-            valeurAcquisition: this.valeurAcquisition_input || undefined,
+            design: formValue.design,
+            etat: formValue.etat,
+            idType: Number(formValue.idType),
+            idCat: Number(formValue.idCat),
+            idMarq: Number(formValue.idMarq),
+            dateMiseService: formValue.dateMiseService ? new Date(formValue.dateMiseService) : undefined,
+            anneeFabrication: formValue.anneeFabrication || undefined,
+            dateAcquisition: formValue.dateAcquisition ? new Date(formValue.dateAcquisition) : undefined,
+            valeurAcquisition: formValue.valeurAcquisition || undefined,
             idGrpIdq: undefined,
             idunite: undefined,
-            numserie: 'INCONNU',
-            position_physique: 'INCONNU'
+            numserie: formValue.numserie || 'INCONNU',
+            position_physique: formValue.position_physique || 'INCONNU',
+            observation: observationValue.trim() || 'INCONNU'  // Use the processed value
         };
-        // 1. Create equipement
-        this.equipementService.create(equipementData)
+
+        // Debug logs
+        console.log('EquipementData created:', equipementData);
+        console.log('Observation value in equipementData:', equipementData.observation);
+
+        // Debug logs
+        console.log('EquipementData created:', equipementData);
+        console.log('EquipementData observation:', equipementData.observation);
+        console.log('✅ Valeur finale observation :', equipementData.observation);
+
+        // Ensure the observation is included in the form value
+        this.form.patchValue({
+            observation: String(observationValue)
+        });
+
+        // Get the final form value to send
+        const finalFormValue = this.form.getRawValue();
+        console.log('Final form value:', finalFormValue);
+        
+        // Ensure observation is a string
+        if (typeof equipementData.observation !== 'string') {
+            equipementData.observation = String(equipementData.observation || 'INCONNU');
+        }
+        
+        // Detailed logging of equipementData
+        console.log('EquipementData created:', equipementData);
+        console.log('EquipementData observation:', equipementData.observation);
+        console.log('EquipementData keys:', Object.keys(equipementData));
+        console.log('EquipementData has observation:', 'observation' in equipementData);
+        
+        // Final payload logging
+        console.log('Données préparées pour l\'API:', equipementData);
+        console.log('Observation value:', observationValue);
+        console.log('Payload à envoyer:', JSON.stringify(equipementData, null, 2));
+        console.log('Payload type:', typeof equipementData);
+        console.log('Payload observation type:', typeof equipementData.observation);
+        console.log('Final payload with any:', JSON.stringify(equipementData as any, null, 2));
+        
+        // 1. Create equipement - bypass TypeScript strict typing
+        this.equipementService.create(equipementData as any)
             .subscribe({
                 next: (createdEquipement: any) => {
                     // 2. If characteristics are selected, send them
@@ -686,7 +757,8 @@ export class EquipementComponent implements OnInit {
                     anneeFabrication: data.anneeFabrication,
                     dateAcquisition: data.dateAcquisition,
                     valeurAcquisition: data.valeurAcquisition,
-                    idunite: data.idunite
+                    idunite: data.idunite,
+                    observation: data.observation
                 });
                 this.isEditMode = true;
                 this.selectedId = id;
@@ -729,7 +801,8 @@ export class EquipementComponent implements OnInit {
                 anneeFabrication: formData.anneeFabrication || undefined,
                 dateAcquisition: formData.dateAcquisition || undefined,
                 valeurAcquisition: formData.valeurAcquisition || undefined,
-                idunite: undefined
+                idunite: undefined,
+                observation: formData.observation || ''
             };
 
             console.log('Données préparées pour l\'API:', equipementData);

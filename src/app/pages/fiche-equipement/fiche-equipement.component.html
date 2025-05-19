@@ -96,13 +96,12 @@
   </div>
 
   <!-- Equipment Details Section -->
-  <div class="details-section" *ngIf="equipement">
-    <div class="fiche-header">
-      <div class="equipment-status">
-        <div class="code-display">{{equipement.codeEqp}}</div>
-        <div class="status-badge" [ngClass]="getStatusClass(equipement.etat)">
-          {{equipement.etat}}
-        </div>
+  <div class="details-section">
+    <div class="fiche-title">Fiche Équipement</div>
+    <div class="fiche-badges-row">
+      <div class="code-display">{{ equipement?.codeEqp }}</div>
+      <div class="status-badge" [ngClass]="getStatusClass(equipement?.etat)">
+        {{ equipement?.etat }}
       </div>
     </div>
 
@@ -116,25 +115,40 @@
         <h3>Affectation</h3>
         <div class="info-grid">
           <div class="info-item">
-            <label>Unité</label>
-            <span>{{ affectation?.designationUnite || equipement.uniteDesignation || '-' }}</span>
+            <span class="label-row">
+              <span class="label">Unité</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ affectation?.designationUnite || equipement.uniteDesignation || '-' }}</span>
           </div>
           
           <div class="info-item">
-            <label>N° décision Affect</label>
-            <span>{{ affectation?.num_decision_affectation || '-' }}</span>
+            <span class="label-row">
+              <span class="label">N° décision Affect</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ affectation?.num_decision_affectation || '-' }}</span>
           </div>
           <div class="info-item">
-            <label>Date d'affectation</label>
-            <span>{{ (affectation?.dateaffec | date:'dd/MM/yyyy') || '-' }}</span>
+            <span class="label-row">
+              <span class="label">Date d'affectation</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ (affectation?.dateaffec | date:'dd/MM/yyyy') || '-' }}</span>
           </div>
           <div class="info-item">
-            <label>N° d'ordre</label>
-            <span>{{ affectation?.num_ordre || '-' }}</span>
+            <span class="label-row">
+              <span class="label">N° d'ordre</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ affectation?.num_ordre || '-' }}</span>
           </div>
           <div class="info-item">
-            <label>Position Physique</label>
-            <span>{{ equipement.position_physique || '-' }}</span>
+            <span class="label-row">
+              <span class="label">Position Physique</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.position_physique || '-' }}</span>
           </div>
         </div>
       </div>
@@ -143,41 +157,66 @@
       <div class="section">
         <h3>Informations Générales</h3>
         <div class="info-grid">
+          <!-- Row 1 -->
           <div class="info-item">
-            <label>Désignation</label>
-            <span>{{ equipement.design }}</span>
+            <span class="label-row">
+              <span class="label">Désignation</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.design }}</span>
           </div>
           <div class="info-item">
-            <label>Marque</label>
-            <span>{{ equipement.marqueNom || '-' }}</span>
+            <span class="label-row">
+              <span class="label">Marque</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.marqueNom || '-' }}</span>
           </div>
           <div class="info-item">
-            <label>Type</label>
-            <span>{{ equipement.typeDesignation || '-' }}</span>
+            <span class="label-row">
+              <span class="label">Type</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.typeDesignation || '-' }}</span>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="info-item">
+            <span class="label-row">
+              <span class="label">Année de fabrication</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.anneeFabrication || '-' }}</span>
           </div>
           <div class="info-item">
-            <label>Numéro de série</label>
-            <span>{{ equipement.numserie || '-' }}</span>
+            <span class="label-row">
+              <span class="label">Date de mise en service</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.dateMiseService | date:'dd/MM/yyyy' }}</span>
+          </div>
+
+          <!-- Row 3 -->
+          <div class="info-item">
+            <span class="label-row">
+              <span class="label">Date d'acquisition</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.dateAcquisition | date:'dd/MM/yyyy' }}</span>
           </div>
           <div class="info-item">
-            <label>État</label>
-            <span>{{ equipement.etat }}</span>
+            <span class="label-row">
+              <span class="label">Valeur d'acquisition</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.valeurAcquisition || '-' }} DH</span>
           </div>
-          <div class="info-item">
-            <label>Date de mise en service</label>
-            <span>{{ equipement.dateMiseService | date:'dd/MM/yyyy' }}</span>
-          </div>
-          <div class="info-item">
-            <label>Année de fabrication</label>
-            <span>{{ equipement.anneeFabrication || '-' }}</span>
-          </div>
-          <div class="info-item">
-            <label>Date d'acquisition</label>
-            <span>{{ equipement.dateAcquisition | date:'dd/MM/yyyy' }}</span>
-          </div>
-          <div class="info-item">
-            <label>Valeur d'acquisition</label>
-            <span>{{ equipement.valeurAcquisition || '-' }} DH</span>
+           <div class="info-item">
+            <span class="label-row">
+              <span class="label">Numéro de série</span>
+              <span class="colon">:</span>
+            </span>
+            <span class="value">{{ equipement.numserie || '-' }}</span>
           </div>
         </div>
       </div>
@@ -212,6 +251,15 @@
           </ng-template>
         </div>
       </div>
+      <!-- Observation Section -->
+      <div class="section">
+        <h3>Observations</h3>
+        <div class="observation-container">
+          <div class="observation-display">
+            {{ equipement?.observation || '-' }}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div> 
+</div>

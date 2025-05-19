@@ -60,7 +60,7 @@ export class EquipementService {
             params = params.set('dateMiseService', filter.dateMiseService.toString());
         }
         if (filter.anneeFabrication) {
-            params = params.set('AnnéeFabrication', filter.anneeFabrication.toString());
+            params = params.set('anneeFabrication', filter.anneeFabrication.toString());
         }
         if (filter.dateAcquisition) {
             params = params.set('dateAcquisition', filter.dateAcquisition.toString());
